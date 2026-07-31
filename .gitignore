@@ -8,7 +8,13 @@ Thumbs.db
 .idea
 .claude
 
-# Yours: the dependency directory and the build output. Ignore what a build
-# produces, commit what a release ships only if consumers install from the repo.
+# Yours: the dependency directory, the build output, and anything with a secret
+# in it. Ignore what a build produces; commit what a release ships only when
+# consumers install straight from the repository.
 # node_modules/
+# __pycache__/
+# .venv/
+# vendor/
 # dist/
+# build/
+# .env

@@ -14,21 +14,28 @@ jobs:
     strategy:
       fail-fast: false
       # A matrix is worth having wherever the project claims to run: two runtime
-      # versions catches deprecations early, and windows-latest catches the path
+      # versions catch deprecations early, and windows-latest catches the path
       # bugs that never reproduce on a Mac. Drop what does not apply.
       matrix:
         os: [ubuntu-latest]
-        # version: [lts, latest]
+        # version: ["3.13", "3.14"]
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # Whatever your toolchain needs — setup-node, setup-python, setup-go,
-      # actions/cache. Everything below this line stays the same in every repo.
-      # - name: Set up <toolchain>
-      #   uses: actions/setup-<toolchain>@v6
+      # The only language-specific step. Pick one, delete the rest — everything
+      # below it is the same in every repository, because it only calls scripts.
+      #
+      # - uses: actions/setup-node@v6
+      #   with: { node-version: "${{ matrix.version }}", cache: npm }
+      # - uses: actions/setup-python@v6
+      #   with: { python-version: "${{ matrix.version }}", cache: pip }
+      # - uses: ruby/setup-ruby@v1
+      #   with: { ruby-version: "${{ matrix.version }}", bundler-cache: true }
+      # - uses: shivammathur/setup-php@v2
+      #   with: { php-version: "${{ matrix.version }}", coverage: none }
 
       - name: Install dependencies
         run: script/bootstrap

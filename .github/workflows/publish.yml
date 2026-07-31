@@ -17,9 +17,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # npm shown here; the shape is the same for PyPI, crates.io and the rest —
-      # the registry trusts this workflow in this repository, so there is no
-      # token to store, rotate, or leak.
+      # Trusted publishing, whichever registry you are on: it trusts *this
+      # workflow in this repository* over OIDC, so there is no token to store,
+      # rotate or leak, and the artifact gets a provenance attestation.
+      # Configure the publisher on the registry side first.
+      #
+      # npm — https://docs.npmjs.com/trusted-publishers
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
@@ -27,13 +30,25 @@ jobs:
           cache: "npm"
           registry-url: "https://registry.npmjs.org"
 
-      # Trusted publishing requires npm >= 11.5.1
-      - name: Update npm
+      - name: Update npm # trusted publishing requires npm >= 11.5.1
         run: npm install -g npm@latest
 
       - name: Install dependencies
         run: npm ci
 
-      # Auth via OIDC, provenance generated automatically
       - name: Publish
         run: npm publish
+
+      # PyPI — https://docs.pypi.org/trusted-publishers/
+      # - uses: actions/setup-python@v6
+      #   with: { python-version: "3.x" }
+      # - run: pipx run build
+      # - uses: pypa/gh-action-pypi-publish@release/v1
+      #
+      # RubyGems — https://guides.rubygems.org/trusted-publishing/
+      # - uses: ruby/setup-ruby@v1
+      #   with: { ruby-version: "3.4", bundler-cache: true }
+      # - uses: rubygems/release-gem@v1
+      #
+      # Packagist takes no publish step at all: it reads the tags off this
+      # repository. Point a webhook at it once and delete this workflow.

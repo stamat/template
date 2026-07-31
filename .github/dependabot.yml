@@ -1,14 +1,14 @@
 version: 2
 updates:
-  # Set package-ecosystem to yours: npm, pip, cargo, gomod, bundler, composer,
-  # docker… Monthly is the interval that gets read; weekly becomes noise you
-  # start ignoring, which is worse than not having it.
+  # Set package-ecosystem to yours — npm, pip, uv, bundler, composer, cargo,
+  # gomod, docker. Monthly is the interval that gets read; weekly becomes noise
+  # you start ignoring, which is worse than not having it at all.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "monthly"
-    # Drop this filter in a repo where the toolchain is the product — a template,
-    # a linter config — and its dev dependencies are what people consume.
+    # Drop this filter in a repo where the toolchain is the product — a
+    # template, a linter config — and its dev dependencies are what people get.
     allow:
       - dependency-type: "production"
 

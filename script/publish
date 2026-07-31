@@ -1,206 +1,121 @@
-#!/usr/bin/env node
+#!/bin/bash
+#
+# Cut a release: pick the version, write it wherever it lives, cut the changelog,
+# build, commit, tag, push, and offer to open the GitHub release with the
+# changelog entry as its body. Pushing the tag is what triggers publish.yml.
+#
+# Language-agnostic by delegation — everything project-specific is another script
+# that this one runs if it is there:
+#
+#   script/version <version>    write the version into whatever file holds it
+#   script/changelog <version>  cut CHANGELOG.md into a released entry
+#   script/build                produce the artifacts the release ships
+#
+# The current version comes from the last `v*` tag, so a project whose version
+# lives in package.json, pyproject.toml, a gemspec, composer.json or nowhere at
+# all is not a special case here.
+#
+# With love, @stamat
 
-/**
- * This script is used to publish a new version of the package.
- * It can automatically increment the patch version if no version is specified in the package.json and commit the changes.
- * It can also automatically tag and push the tags.
- * Using GH CLI, it can also create a release.
- *
- * Fucking awesome, right?
- *
- * With love, @stamat
- */
-import readline from 'node:readline'
-import { exec, execFile } from 'node:child_process'
-import fs from 'node:fs'
-import os from 'node:os'
-import path from 'node:path'
+set -euo pipefail
 
-const argVersion = process.argv[2]
-const packageJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8'))
+[ $# -le 1 ] || { echo "usage: script/publish [version]" >&2; exit 1; }
 
-function question(prompt) {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  })
+git rev-parse --git-dir >/dev/null 2>&1 || { echo "Not a git repository" >&2; exit 1; }
 
-  return new Promise((resolve) => {
-    rl.question(prompt, (answer) => {
-      rl.close()
-      resolve(answer)
-    })
-  })
+current="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)"
+current="${current#v}"
+: "${current:=0.0.0}"
+
+version="${1:-}"
+
+if [ -z "$version" ]; then
+  case "$current" in
+    # a prerelease or build version is not mine to guess the next of
+    *-* | *+*) suggested="" ;;
+    *.*.*) suggested="${current%.*}.$(( ${current##*.} + 1 ))" ;;
+    *) suggested="" ;;
+  esac
+
+  if [ -n "$suggested" ]; then
+    read -r -p "Last release was v$current. Release v$suggested? (y/n) " answer
+    [ "$answer" = y ] && version="$suggested"
+  fi
+
+  if [ -z "$version" ]; then
+    read -r -p "Version to release: v" version
+  fi
+fi
+
+version="${version#v}"
+
+if ! printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)*$'; then
+  echo "Not a semantic version: $version" >&2
+  exit 1
+fi
+
+if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+  echo "v$version is already tagged" >&2
+  exit 1
+fi
+
+# `git add -A` below picks up everything in the tree, so what is already in it
+# has to be a deliberate part of this release
+if [ -n "$(git status --porcelain)" ]; then
+  git status --short
+  read -r -p "Uncommitted changes will go into the release commit. Continue? (y/n) " answer
+  [ "$answer" = y ] || exit 1
+fi
+
+# script/changelog leaves the entry it cut here, for the GitHub release below
+notes="${TMPDIR:-/tmp}/$(basename "$PWD")-release-notes-v$version.md"
+rm -f "$notes"
+
+commit_all() {
+  git add -A
+  if git diff --cached --quiet; then
+    echo "Nothing staged, skipping commit: $1"
+  else
+    git commit -m "$1"
+  fi
 }
 
-function isValidVersion(version) {
-  return /^(\d+)\.(\d+)\.(\d+)(?:-([\w-]+(?:\.[\w-]+)*))?(?:\+([\w-]+(?:\.[\w-]+)*))?$/.test(version)
-}
+if [ -x script/version ]; then
+  script/version "$version"
+fi
 
-function incrementPatchVersion(version) {
-  // can't auto-bump prerelease/build versions (e.g. 1.2.3-beta.1), ask for manual entry instead
-  if (version.includes('-') || version.includes('+')) return null
-  const parts = version.split('.')
-  const patch = parseInt(parts[2]) + 1
-  return `${parts[0]}.${parts[1]}.${patch}`
-}
+if [ -x script/changelog ]; then
+  script/changelog "$version"
+fi
 
-function runPromise(child) {
-  // stdout/stderr are null when stdio is inherited (interactive commands)
-  child.stdout?.on('data', (data) => {
-    console.log(data.toString())
-  })
+commit_all "Bump version to $version"
 
-  child.stderr?.on('data', (data) => {
-    console.log(data.toString())
-  })
+if [ -x script/build ]; then
+  script/build
+  commit_all "Build version $version"
+fi
 
-  return new Promise(function(resolve, reject) {
-    child.addListener('error', reject)
-    child.addListener('exit', (code) => {
-      if (code === 0) {
-        resolve()
-      } else {
-        reject(new Error(`Command exited with code ${code}`))
-      }
-    })
-  })
-}
+# Commits first: a push that fails leaves no tag behind, so the retry is just
+# running this again rather than deleting a tag by hand.
+git push
+git tag "v$version"
+git push --tags
 
-async function run(cmd, exitOnError = true) {
-  console.log(cmd)
-  try {
-    await runPromise(exec(cmd))
-  } catch (e) {
-    console.error(e.message)
-    if (exitOnError) process.exit(1)
-  }
-}
+echo "Pushed v$version — publish.yml takes it from here"
 
-// like run(), but takes an args array so user input never touches the shell
-async function runFile(cmd, args, exitOnError = true) {
-  console.log([cmd, ...args].join(' '))
-  try {
-    await runPromise(execFile(cmd, args))
-  } catch (e) {
-    console.error(e.message)
-    if (exitOnError) process.exit(1)
-  }
-}
+command -v gh >/dev/null 2>&1 || { echo "gh is not installed, no GitHub release created"; exit 0; }
 
-async function commit(message) {
-  const nothingStaged = await new Promise((resolve) =>
-    exec('git diff --cached --quiet', (err) => resolve(!err)))
-  if (nothingStaged) {
-    console.log(`Nothing staged, skipping commit: ${message}`)
-    return
-  }
-  await run(`git commit -m "${message}"`)
-}
+read -r -p "Create the GitHub release? (y/n) " answer
+[ "$answer" = y ] || exit 0
 
-async function publish(version) {
-  packageJson.version = version
-  fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2) + '\n')
-
-  await run('git add package.json')
-
-  // script/changelog leaves the entry it cut here for the GitHub release below
-  const notesPath = path.join(os.tmpdir(), `${path.basename(process.cwd())}-release-notes-v${version}.md`)
-
-  // repos keeping a CHANGELOG.md drop in a script/changelog to cut its
-  // [Unreleased] section into a release entry — it lands in the bump commit, so
-  // the tag contains it and no CI step has to push back to the default branch
-  if (fs.existsSync(path.join(process.cwd(), 'script/changelog'))) {
-    // a leftover from an earlier run of this version must not become the notes
-    fs.rmSync(notesPath, { force: true })
-    await runFile('script/changelog', [version])
-    await run('git add .')
-  }
-
-  await commit(`Bump version to ${version}`)
-
-  if (fs.existsSync(path.join(process.cwd(), 'script/build'))) {
-    await run('script/build')
-    await run('git add .')
-    await commit(`Build version ${version}`)
-  }
-
-  await run(`git tag v${version}`)
-
-  // npm publish happens in CI (publish.yml) via trusted publishing when the tag is pushed
-  await run('git push')
-  await run('git push --tags')
-
-  const answer = await question('Do you want to create a GitHub release? (y/n): ')
-  if (answer === 'y') {
-    const args = ['release', 'create', `v${version}`, '--title', `v${version}`, '--latest']
-    if (fs.existsSync(notesPath)) {
-      console.log(`Release notes from the CHANGELOG entry: ${notesPath}`)
-      // GitHub prepends the body to the generated notes, so the entry keeps the
-      // top and the compare link lands under it
-      args.push('--notes-file', notesPath, '--generate-notes')
-    } else {
-      const notes = await question('Enter notes for the release (optional): ')
-      if (notes.trim() !== '') {
-        args.push('--notes', notes)
-      } else {
-        args.push('--generate-notes')
-      }
-    }
-    await runFile('gh', args)
-    // the release carries the notes now — a failing gh exits above, keeping the
-    // file around for a manual retry
-    fs.rmSync(notesPath, { force: true })
-  }
-}
-
-async function init() {
-  if (!packageJson.version) {
-    console.log('No version found in package.json')
-    process.exit(1)
-  }
-
-  // a clean tree guarantees `git add .` after the build only picks up build output
-  const dirty = await new Promise((resolve, reject) => {
-    exec('git status --porcelain', (err, stdout) => err ? reject(err) : resolve(stdout.trim()))
-  })
-  if (dirty !== '') {
-    console.log('Working tree is not clean:\n' + dirty)
-    const answer = await question('Uncommitted changes will be included in the release commits. Continue? (y/n) ')
-    if (answer !== 'y') process.exit(1)
-  }
-
-  if (argVersion && !isValidVersion(argVersion)) {
-    console.log('Invalid version: ', argVersion)
-    console.log('Current version: ', packageJson.version)
-    process.exit(1)
-  }
-
-  if (argVersion && packageJson.version === argVersion) {
-    console.log('Version is already ', argVersion)
-    process.exit(1)
-  }
-
-  if (!argVersion) {
-    console.log('Current version: ', packageJson.version)
-    const version = incrementPatchVersion(packageJson.version)
-    const answer = version ? await question(`Do you want to increment the version to ${version}? (y/n) `) : 'n'
-    if (answer === 'y') {
-      await publish(version)
-    } else {
-      const desiredVersion = await question(`Enter the desired version: (or press enter to use ${packageJson.version})`)
-      if (desiredVersion.trim() === '') {
-        await publish(packageJson.version)
-      } else {
-        if (!isValidVersion(desiredVersion)) {
-          console.log('Invalid version: ', desiredVersion)
-          process.exit(1)
-        }
-        await publish(desiredVersion)
-      }
-    }
-  } else {
-    await publish(argVersion)
-  }
-}
-init()
+if [ -f "$notes" ]; then
+  echo "Release notes from the CHANGELOG entry: $notes"
+  # GitHub puts the body above its generated notes, so the entry keeps the top
+  # and the compare link lands under it
+  gh release create "v$version" --title "v$version" --latest --notes-file "$notes" --generate-notes
+  # the release carries the notes now; a failing gh exits above and leaves the
+  # file where it is, for a retry by hand
+  rm -f "$notes"
+else
+  gh release create "v$version" --title "v$version" --latest --generate-notes
+fi

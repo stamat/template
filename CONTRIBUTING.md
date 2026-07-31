@@ -26,9 +26,9 @@ which is generated, what the one command is that proves a change works.>
 
 ## Reporting a bug
 
-Include what you ran, what you expected, what happened, and the versions —
-<language/runtime>, this project, and your OS. A reproduction is worth more than
-a description of one.
+[Open an issue](../../issues/new/choose) — the form asks for what you ran, what
+you expected, the version and the environment, because those are the four things
+every fix starts from. A reproduction is worth more than a description of one.
 
 ## Pull requests
 
@@ -45,7 +45,8 @@ Commit messages are freeform, write something that says what changed.
 
 Maintainer flow, recorded here so the automation isn't a mystery:
 
-`script/publish [version]` bumps the version, runs `script/changelog` to cut
+`script/publish [version]` takes the current version from the last `v*` tag,
+writes the new one with `script/version`, runs `script/changelog` to cut
 `[Unreleased]` into a released entry, builds, commits, tags and pushes. Pushing
 the tag triggers [publish.yml](.github/workflows/publish.yml), which publishes
 via trusted publishing — OIDC, no tokens stored anywhere. The changelog entry
