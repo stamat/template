@@ -7,14 +7,23 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    # One pull request per monthly batch, not one per package.
+    # One pull request per monthly batch, not one per package, with development
+    # and production kept apart — a toolchain bump reads differently from one
+    # that reaches the people installing this. `dependency-type` in a group is
+    # npm, bundler, composer, mix, maven and pip only; elsewhere group by
+    # `patterns` instead.
     groups:
-      dependencies:
-        patterns: ["*"]
-    # Drop this filter in a repo where the toolchain is the product — a
-    # template, a linter config — and its dev dependencies are what people get.
-    allow:
-      - dependency-type: "production"
+      production:
+        dependency-type: "production"
+      development:
+        dependency-type: "development"
+    # Don't pick up a release that is hours old. A compromised or broken
+    # version is usually caught and pulled within a few days, and nothing here
+    # needs to be on the newest thing the same afternoon. `default-days` works
+    # everywhere; the semver-specific ones are ecosystem-dependent.
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
 
   # The workflows pin action majors, and those move too.
   - package-ecosystem: "github-actions"
@@ -24,3 +33,5 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+    cooldown:
+      default-days: 7
