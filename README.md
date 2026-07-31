@@ -38,6 +38,8 @@ nothing else, so the only thing you change per project is the setup step.
 | [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) | What and why, how to check it, and the checklist that keeps the changelog entry from being the thing everyone forgets. |
 | [CHANGELOG.md](CHANGELOG.md) | [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, with the house rules for writing an entry. |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, how to report a bug, what a pull request needs, how a release works. Fill in the blanks marked `<…>`. |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | [Contributor Covenant 3.0](https://www.contributor-covenant.org/version/3/0/), verbatim apart from the reporting address — **replace it**, a code of conduct nobody can report to is decoration. GitHub links it from the issue and PR forms once the file exists. |
+| [AGENTS.md](AGENTS.md) | The [README for coding agents](https://agents.md/): commands, principles, boundaries, and the feature checklist. `CLAUDE.md` and `.github/copilot-instructions.md` are symlinks to it — one file, every tool. Fill in the blanks marked `<…>`; a rule earns its line only if it changes what an agent would otherwise do. |
 | [LICENSE](LICENSE) | MIT. Change the name and year, or replace it wholesale. |
 | [.editorconfig](.editorconfig) | UTF-8, LF, two spaces — four where the language settled on four. |
 | [.gitignore](.gitignore) | OS and editor noise, with the per-language lines commented out below it. |
@@ -77,9 +79,6 @@ successfully.
 
 ## What is deliberately missing
 
-- **A code of conduct.** Add one when the project has contributors who are not
-  you; [Contributor Covenant](https://www.contributor-covenant.org/) is the
-  default and takes a minute.
 - **A security policy.** Add `SECURITY.md` when there is something to disclose
   responsibly — anything handling untrusted input, auth, or user data. The
   issue chooser already points at private advisories.
@@ -95,6 +94,7 @@ rm -rf .git && git init
 ```
 
 Then: fill in the `script/` bodies, uncomment the setup step and the triggers in
-`ci.yml`, replace the `<…>` placeholders in `CONTRIBUTING.md` and
-`.github/ISSUE_TEMPLATE/config.yml`, and write the first `[Unreleased]` entry.
+`ci.yml`, replace the `<…>` placeholders in `CONTRIBUTING.md`,
+`CODE_OF_CONDUCT.md` and `.github/ISSUE_TEMPLATE/config.yml`, and write the
+first `[Unreleased]` entry.
 Delete this README — it documents the template, not your project.

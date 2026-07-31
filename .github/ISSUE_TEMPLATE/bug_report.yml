@@ -76,3 +76,5 @@ body:
           required: true
         - label: I can reproduce this on the latest release
           required: false
+        - label: I agree to follow this project's [Code of Conduct](../blob/main/CODE_OF_CONDUCT.md)
+          required: true

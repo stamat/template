@@ -1,6 +1,7 @@
 # Contributing to <project>
 
-Issues and pull requests are welcome.
+Issues and pull requests are welcome. Taking part means keeping to the
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
 <One paragraph on what this project is for and what it refuses to become. This
 is the most useful thing on the page: it is what tells someone whether the
