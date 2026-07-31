@@ -39,7 +39,7 @@ nothing else, so the only thing you change per project is the setup step.
 | [CHANGELOG.md](CHANGELOG.md) | [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, with the house rules for writing an entry. |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, how to report a bug, what a pull request needs, how a release works. Fill in the blanks marked `<…>`. |
 | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | [Contributor Covenant 3.0](https://www.contributor-covenant.org/version/3/0/), verbatim apart from the reporting address — **replace it**, a code of conduct nobody can report to is decoration. GitHub links it from the issue and PR forms once the file exists. |
-| [AGENTS.md](AGENTS.md) | The [README for coding agents](https://agents.md/): commands, principles, boundaries, and the feature checklist. `CLAUDE.md` and `.github/copilot-instructions.md` are symlinks to it — one file, every tool. Fill in the blanks marked `<…>`; a rule earns its line only if it changes what an agent would otherwise do. |
+| [AGENTS.md](AGENTS.md) | The [README for coding agents](https://agents.md/): commands, layout, how documentation works here, principles, boundaries, and the feature checklist. `CLAUDE.md` and `.github/copilot-instructions.md` are symlinks to it — one file, every tool. Fill in the blanks marked `<…>`; a rule earns its line only if it changes what an agent would otherwise do. |
 | [LICENSE](LICENSE) | MIT. Change the name and year, or replace it wholesale. |
 | [.editorconfig](.editorconfig) | UTF-8, LF, two spaces — four where the language settled on four. |
 | [.gitignore](.gitignore) | OS and editor noise, with the per-language lines commented out below it. |
@@ -86,6 +86,42 @@ successfully.
   issue chooser already points at private advisories.
 - **Branch protection, CODEOWNERS, a release drafter.** Repository settings and
   process, not files to copy. Turn them on when more than one person merges.
+
+## Prior art, and the practices in play
+
+The feature checklist in [AGENTS.md](AGENTS.md) demands prior art with a
+citation per fact, so here is the template's own. The nearest neighbors:
+[github/scripts-to-rule-them-all](https://github.com/github/scripts-to-rule-them-all)
+is the script pattern with nothing around it;
+[PostHog/template](https://github.com/PostHog/template) adds editor and issue
+scaffolding but stops before CI and releasing;
+[Telefonica/opensource-scaffold](https://github.com/Telefonica/opensource-scaffold)
+and [DSACMS/repo-scaffolder](https://github.com/DSACMS/repo-scaffolder)
+scaffold licensing and compliance, not releases. What this template adds is
+the combination: the same scripts, plus a tag-triggered release pipeline with
+no token stored anywhere, and agent instructions — none of it tied to a
+language.
+
+The practices, each one written down elsewhere first:
+
+- [Scripts to Rule Them All](https://github.blog/engineering/scripts-to-rule-them-all/)
+  — fixed script names are the only interface contributors and CI touch.
+- [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
+  [Semantic Versioning](https://semver.org/spec/v2.0.0.html) — the entry is
+  written by the person who made the change, when they made it, and becomes
+  the release notes verbatim.
+- [Trusted publishing](https://docs.npmjs.com/trusted-publishers) — a tag
+  publishes over OIDC; no token to store, rotate, or leak.
+- [Issue forms](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-issue-forms)
+  — required fields, so a report arrives with the version and a reproduction.
+- [AGENTS.md](https://agents.md/) — one agent file; symlinks give every tool
+  the name it looks for.
+- [Contributor Covenant](https://www.contributor-covenant.org/version/3/0/) —
+  verbatim, with a reporting address that has to be real.
+- Least privilege in CI — the workflow token is read-only, action majors are
+  pinned and Dependabot batches their updates monthly.
+- Stubs exit 1 — a check that passes without running anything is worse than
+  no check. Not borrowed from anywhere; it might be the one original idea here.
 
 ## Adopting it
 

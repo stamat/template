@@ -21,6 +21,24 @@ script/lint      # run the linters (the authority; CI runs it)
 of truth, which is generated, where tests live, what else a new module must
 touch (an export map, a manifest, a registry).>
 
+## Documentation
+
+<Which engine renders the docs and where the source lives — e.g. "Markdown in
+`docs/`, built by <engine>, deployed by <workflow>; the nav comes from
+<file>." Then the comment format the API reference is generated from —
+JSDoc, docstrings, YARD, PHPDoc — and which file is generated from it, so
+nobody edits the output.>
+
+- **Document in the same change as the code.** A behavior change that ships
+  undocumented is unfinished — the doc page, the README section, the comment
+  format above, whichever of them covers it.
+- **Edit the page that already covers it.** Do not add new pages, new README
+  sections, or summary and migration files nobody asked for. A doc nobody
+  asked for is a doc nobody maintains.
+- **Write for the person using it**, not the person who wrote it: what it
+  does, one example that runs, and the part that would otherwise surprise
+  them.
+
 ## Principles
 
 - **Test-driven.** The test is the spec; write it first. A failing test means
@@ -39,8 +57,8 @@ touch (an export map, a manifest, a registry).>
 ## Boundaries
 
 - **Always:** run `script/lint` and `script/test` before calling work done;
-  pair every fix or feature with a test; add a changelog entry under
-  `## [Unreleased]`.
+  pair every fix or feature with a test; document anything user-visible where
+  it is already documented; add a changelog entry under `## [Unreleased]`.
 - **Ask first:** changing a public API; adding a dependency; <the project's
   own "ask first" — a schema migration, a new top-level module, a config
   format change>.
