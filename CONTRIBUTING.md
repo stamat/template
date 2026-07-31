@@ -39,6 +39,10 @@ every fix starts from. A reproduction is worth more than a description of one.
   [CHANGELOG.md](CHANGELOG.md) — that file explains the format.
 - **Keep the diff about one thing.** A rename bundled with a fix is two reviews
   wearing one hat.
+- **Agent-written code is welcome — you still own it.** It meets the same bar
+  as handwritten code: tests, lint, CI green. You understand every line well
+  enough to answer review questions; "the agent wrote it" is not an answer.
+  Point your agent at [AGENTS.md](AGENTS.md) before it starts.
 
 Commit messages are freeform, write something that says what changed.
 
