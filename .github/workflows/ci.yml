@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # The only language-specific step. Pick one, delete the rest — everything
       # below it is the same in every repository, because it only calls scripts.
