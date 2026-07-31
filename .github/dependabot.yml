@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # Set package-ecosystem to yours: npm, pip, cargo, gomod, bundler, composer,
+  # docker… Monthly is the interval that gets read; weekly becomes noise you
+  # start ignoring, which is worse than not having it.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    # Drop this filter in a repo where the toolchain is the product — a template,
+    # a linter config — and its dev dependencies are what people consume.
+    allow:
+      - dependency-type: "production"
+
+  # The workflows pin action majors, and those move too.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"

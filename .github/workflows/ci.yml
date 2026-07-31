@@ -1,0 +1,43 @@
+name: CI
+
+# In this repository the scripts below are stubs that exit 1, so CI runs only on
+# demand. Uncomment the two triggers the moment script/test does something real.
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  # pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      # A matrix is worth having wherever the project claims to run: two runtime
+      # versions catches deprecations early, and windows-latest catches the path
+      # bugs that never reproduce on a Mac. Drop what does not apply.
+      matrix:
+        os: [ubuntu-latest]
+        # version: [lts, latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # Whatever your toolchain needs — setup-node, setup-python, setup-go,
+      # actions/cache. Everything below this line stays the same in every repo.
+      # - name: Set up <toolchain>
+      #   uses: actions/setup-<toolchain>@v6
+
+      - name: Install dependencies
+        run: script/bootstrap
+
+      - name: Lint
+        run: script/lint
+
+      - name: Test
+        run: script/test
+
+      - name: Build
+        run: script/build
