@@ -9,6 +9,15 @@ on:
   #     - main
   # pull_request:
 
+# This workflow only reads the repository; say so, and the token can do no more.
+permissions:
+  contents: read
+
+# A new push to the same branch or pull request supersedes the run in flight.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     strategy:

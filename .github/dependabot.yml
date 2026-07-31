@@ -7,6 +7,10 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    # One pull request per monthly batch, not one per package.
+    groups:
+      dependencies:
+        patterns: ["*"]
     # Drop this filter in a repo where the toolchain is the product — a
     # template, a linter config — and its dev dependencies are what people get.
     allow:
@@ -17,3 +21,6 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    groups:
+      actions:
+        patterns: ["*"]

@@ -57,7 +57,9 @@ you are writing in:
 | `script/version` | `npm version "$1" --no-git-tag-version` | `uv version "$1"` | `sed` into `version.rb` | `composer config version "$1"` |
 
 `script/build` and `script/server` are whatever those mean here — for a library
-with nothing to compile, `build` can be `exit 0` with a comment saying why.
+with nothing to compile, `build` can be `exit 0` with a comment saying why. The
+table is examples, not a list of what is supported: Go (`go test ./...`), Rust
+(`cargo test`), or a pile of shell scripts wire up the same way.
 
 ## How a release works
 
@@ -87,6 +89,9 @@ successfully.
 
 ## Adopting it
 
+[Use this template](https://github.com/stamat/template/generate) on GitHub, or
+do the same by hand:
+
 ```bash
 git clone https://github.com/stamat/template.git my-project
 cd my-project
@@ -94,7 +99,12 @@ rm -rf .git && git init
 ```
 
 Then: fill in the `script/` bodies, uncomment the setup step and the triggers in
-`ci.yml`, replace the `<…>` placeholders in `CONTRIBUTING.md`,
-`CODE_OF_CONDUCT.md` and `.github/ISSUE_TEMPLATE/config.yml`, and write the
-first `[Unreleased]` entry.
+`ci.yml`, replace the `<…>` placeholders, and write the first `[Unreleased]`
+entry. Every placeholder is an angle bracket followed by a letter, so this
+finds the ones you missed:
+
+```bash
+grep -rn '<[A-Za-z]' --exclude-dir={.git,script} .
+```
+
 Delete this README — it documents the template, not your project.
